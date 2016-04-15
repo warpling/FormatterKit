@@ -101,6 +101,7 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
 @synthesize futureDeicticExpression = _futureDeicticExpression;
 @synthesize deicticExpressionFormat = _deicticExpressionFormat;
 @synthesize suffixExpressionFormat = _suffixExpressionFormat;
+@synthesize noSpaceSuffixExpressionFormat = _noSpaceSuffixExpressionFormat;
 @synthesize approximateQualifierFormat = _approximateQualifierFormat;
 @synthesize presentTimeIntervalMargin = _presentTimeIntervalMargin;
 @synthesize usesAbbreviatedCalendarUnits = _usesAbbreviatedCalendarUnits;
@@ -109,6 +110,7 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
 @synthesize numberOfSignificantUnits = _numberOfSignificantUnits;
 @synthesize leastSignificantUnit = _leastSignificantUnit;
 @synthesize significantUnits = _significantUnits;
+@synthesize usesSpaceBetweenNumberAndUnit = _spaceBetweenNumberAndUnit;
 
 - (id)init {
     self = [super init];
@@ -123,9 +125,10 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
     self.presentDeicticExpression = NSLocalizedStringFromTableInBundle(@"just now", @"FormatterKit", [NSBundle formatterKitBundle], @"Present Deictic Expression");
     self.futureDeicticExpression = NSLocalizedStringFromTableInBundle(@"from now", @"FormatterKit", [NSBundle formatterKitBundle], @"Future Deictic Expression");
 
-    self.deicticExpressionFormat = NSLocalizedStringWithDefaultValue(@"Deictic Expression Format String", @"FormatterKit", [NSBundle formatterKitBundle], @"%@ %@", @"Deictic Expression Format (#{Time} #{Ago/From Now}");
-    self.approximateQualifierFormat = NSLocalizedStringFromTableInBundle(@"about %@", @"FormatterKit", [NSBundle formatterKitBundle], @"Approximate Qualifier Format");
-    self.suffixExpressionFormat = NSLocalizedStringWithDefaultValue(@"Suffix Expression Format String", @"FormatterKit", [NSBundle formatterKitBundle], @"%@ %@", @"Suffix Expression Format (#{Time} #{Unit})");
+    self.deicticExpressionFormat = NSLocalizedStringWithDefaultValue(@"Deictic Expression Format String", @"FormatterKit", [NSBundle bundleForClass:[self class]], @"%@ %@", @"Deictic Expression Format (#{Time} #{Ago/From Now}");
+    self.approximateQualifierFormat = NSLocalizedStringFromTableInBundle(@"about %@", @"FormatterKit", [NSBundle bundleForClass:[self class]],  @"Approximate Qualifier Format");
+    self.suffixExpressionFormat = NSLocalizedStringWithDefaultValue(@"Suffix Expression Format String", @"FormatterKit", [NSBundle bundleForClass:[self class]], @"%@ %@", @"Suffix Expression Format (#{Time} #{Unit})");
+    self.noSpaceSuffixExpressionFormat = NSLocalizedStringWithDefaultValue(@"No Space Suffix Expression Format String", @"FormatterKit", [NSBundle bundleForClass:[self class]], @"%@%@", @"No Space Suffix Expression Format (#{Time}#{Unit})");
 
     self.presentTimeIntervalMargin = 1;
 
@@ -166,11 +169,16 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
         if ((self.significantUnits & unit) && NSCalendarUnitCompareSignificance(self.leastSignificantUnit, unit) != NSOrderedDescending) {
             NSNumber *number = @(abs((int)[[components valueForKey:unitName] integerValue]));
             if ([number integerValue]) {
-                NSString *suffix = [NSString stringWithFormat:self.suffixExpressionFormat, number, [self localizedStringForNumber:[number unsignedIntegerValue] ofCalendarUnit:unit]];
+                
+                
+                NSString *format = self.usesSpaceBetweenNumberAndUnit ? self.suffixExpressionFormat : self.noSpaceSuffixExpressionFormat;
+                NSString *suffix = [NSString stringWithFormat:format, number, [self localizedStringForNumber:[number unsignedIntegerValue] ofCalendarUnit:unit]];
                 if (!string) {
                     string = suffix;
                 } else if (self.numberOfSignificantUnits == 0 || numberOfUnits < self.numberOfSignificantUnits) {
-                    string = [string stringByAppendingFormat:@" %@", suffix];
+                    string = [string stringByAppendingFormat:@"%@%@",
+                              (self.usesSpaceBetweenNumberAndUnit ? @" " : @""),
+                              suffix];
                 } else {
                     isApproximate = YES;
                 }
@@ -656,6 +664,7 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
     formatter.usesAbbreviatedCalendarUnits = self.usesAbbreviatedCalendarUnits;
     formatter.usesApproximateQualifier = self.usesApproximateQualifier;
     formatter.usesIdiomaticDeicticExpressions = self.usesIdiomaticDeicticExpressions;
+    formatter.usesSpaceBetweenNumberAndUnit = self.usesSpaceBetweenNumberAndUnit;
 
     return formatter;
 }
@@ -675,6 +684,7 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
     self.usesAbbreviatedCalendarUnits = [aDecoder decodeBoolForKey:NSStringFromSelector(@selector(usesAbbreviatedCalendarUnits))];
     self.usesApproximateQualifier = [aDecoder decodeBoolForKey:NSStringFromSelector(@selector(usesApproximateQualifier))];
     self.usesIdiomaticDeicticExpressions = [aDecoder decodeBoolForKey:NSStringFromSelector(@selector(usesIdiomaticDeicticExpressions))];
+    self.usesSpaceBetweenNumberAndUnit = [aDecoder decodeBoolForKey:NSStringFromSelector(@selector(usesSpaceBetweenNumberAndUnit))];
 
     return self;
 }
@@ -692,6 +702,7 @@ static inline NSComparisonResult NSCalendarUnitCompareSignificance(NSCalendarUni
     [aCoder encodeBool:self.usesAbbreviatedCalendarUnits forKey:NSStringFromSelector(@selector(usesAbbreviatedCalendarUnits))];
     [aCoder encodeBool:self.usesApproximateQualifier forKey:NSStringFromSelector(@selector(usesApproximateQualifier))];
     [aCoder encodeBool:self.usesIdiomaticDeicticExpressions forKey:NSStringFromSelector(@selector(usesIdiomaticDeicticExpressions))];
+    [aCoder encodeBool:self.usesSpaceBetweenNumberAndUnit forKey:NSStringFromSelector(@selector(usesSpaceBetweenNumberAndUnit))];
 }
 
 @end

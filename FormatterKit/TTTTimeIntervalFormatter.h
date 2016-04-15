@@ -69,6 +69,12 @@
 @property (nonatomic, strong) NSString *suffixExpressionFormat;
 
 /**
+ Specifies the localized string used to format the time with its no space suffix. "#{Time}#{Unit}" by default.
+ */
+@property (nonatomic, strong) NSString *noSpaceSuffixExpressionFormat;
+
+
+/**
  Specifies the time interval before and after the present moment that is described as still being in the present, rather than the past or future. Defaults to 1 second.
  */
 @property (nonatomic, assign) NSTimeInterval presentTimeIntervalMargin;
@@ -79,6 +85,13 @@
  @discussion This implementation is entirely separate from the equivalent behavior used by `NSDateFormatter`.
  */
 @property (nonatomic, assign) BOOL usesIdiomaticDeicticExpressions;
+
+/**
+ Specifies whether to use a space between the number and unit, such as "4min" instead of "4 min". Defaults to `NO`.
+ 
+ @discussion This implementation is entirely separate from the equivalent behavior used by `NSDateFormatter`.
+ */
+@property (nonatomic, assign) BOOL usesSpaceBetweenNumberAndUnit;
 
 ///-----------------------------------------
 /// @name Configuring Approximate Qualifiers
